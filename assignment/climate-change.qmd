@@ -1,6 +1,6 @@
 ---
 title: "Climate Change Module"
-author: 'Add name'
+author: 'Samantha Libor'
 format:
   html:
     embed-resources: true
@@ -134,27 +134,26 @@ Use a search engine (e.g., Google) or a chat LLM to find out how to calculate a 
 
 **Answer 6:**
 
-I used the prompt: "how to calculate a rolling average in R with example"
+I used the prompt: "how to calculate a rolling average in R with example" in chatGPT. It gave me a few outputs with different packages, and I decided on the slider package because its within tidyverse. I had to switch the column names and add more columns from the example output to get what I needed.
 
 **Question 7:**
 
 -   What is the meaning of "5-year average" vs. "annual average"?
 -   Create a data frame from the annual temperature anomaly data (from Question 4) with three new columns: 5-year running averages, 10-year running averages, and 20-year running averages.
 
-```{}
-```
-
 **Answer 7:**
 
+The annual average represents the temperature anomaly for a single year. The 5-year average smooths out these fluctuations by taking the mean of five consecutive years, providing a clearer picture of long-term trends.
+
 ```{r}
-install.packages("slider")
 library(slider)
 globalMeansRunning <- globalMeans |> 
   mutate(
     rolling5yr  = slide_dbl(AnnualMean, mean, .before = 2, .after = 2, .complete = TRUE),
     rolling10yr = slide_dbl(AnnualMean, mean, .before = 4, .after = 5, .complete = TRUE),
     rolling20yr = slide_dbl(AnnualMean, mean, .before = 9, .after = 10, .complete = TRUE)
-  )
+  ) |> 
+  select(-LowessSmoothing)
 globalMeansRunning
 ```
 
@@ -163,6 +162,18 @@ globalMeansRunning
 Plot the different averages on the *same plot* and describe what differences you see and why.
 
 **Answer 8:**
+
+```{r}
+globalRollingLong <- globalMeansRunning |> 
+  pivot_longer(cols = c(rolling5yr, rolling10yr, rolling20yr), 
+               names_to = "Type", values_to = "averageTemp")
+globalRollingLong |> 
+  ggplot(aes(x = Year, y = averageTemp, color = Type)) +
+  geom_line() +
+  theme_classic()
+```
+
+The rolling 5 year average fluctuates the most, then the rolling 10 year, and then the rolling 20 year. This makes sense because a smaller window like 5 years reacts more to short-term fluctuations when a larger window like 10 or 20 years smooths those fluctuations, focusing on long-term patterns.
 
 **Question 9:**
 
