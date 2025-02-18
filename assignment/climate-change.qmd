@@ -116,11 +116,11 @@ globalMeans |>
   ggplot(aes(Year, AnnualMean)) +
   geom_line() +
   theme_classic() +
-  ylab("Global temperature anomaly (C)") +
+  ylab("Global temperature anomaly (C)")  +
   scale_x_continuous(breaks = seq(1880, 2025, 10))
 ```
 
-I see an overall positive trend in the plot. This means that over time, the global temperature is deviating more from the long-term average from 1951 to 1980. It also means that the average global temperature is increasing
+I see an overall positive trend in the plot. This means that over time, the global temperature is deviating more from the long-term average from 1951 to 1980. It also means that the average global temperature is increasing over time.
 
 ## Evaluating the evidence for a "Pause" in warming?
 
@@ -134,7 +134,7 @@ Use a search engine (e.g., Google) or a chat LLM to find out how to calculate a 
 
 **Answer 6:**
 
-I used the prompt: "how to calculate a rolling average in R with example" in chatGPT. It gave me a few outputs with different packages, and I decided on the slider package because its within tidyverse. I had to switch the column names and add more columns from the example output to get what I needed.
+I used the prompt: "how to calculate a rolling average in R with example" in chatGPT. It gave me a few outputs with different packages, and I decided on the slider package because its within tidyverse. I had to switch the column names and add more columns from the example output to get what I needed, but the code provided worked well.
 
 **Question 7:**
 
@@ -170,7 +170,9 @@ globalRollingLong <- globalMeansRunning |>
 globalRollingLong |> 
   ggplot(aes(x = Year, y = averageTemp, color = Type)) +
   geom_line() +
-  theme_classic()
+  theme_bw()  +
+  scale_x_continuous(breaks = seq(1880, 2025, 10)) +
+  ylab("Global temperature anomaly (C)")
 ```
 
 The rolling 5 year average fluctuates the most, then the rolling 10 year, and then the rolling 20 year. This makes sense because a smaller window like 5 years reacts more to short-term fluctuations when a larger window like 10 or 20 years smooths those fluctuations, focusing on long-term patterns.
@@ -180,6 +182,8 @@ The rolling 5 year average fluctuates the most, then the rolling 10 year, and th
 By examining the data here, what evidence do you find or not find for such a pause?
 
 **Answer 9:**
+
+There is evidence of a pause in global warming when using rolling averages. There appears to be a brief flattening of the lines from 1950 to around 1975, which can be seen most in the rolling 10 and 20 year lines. There is still fluctuation in the 5 year line especially, but there does appear to be a small pause there.
 
 ## Longer term trends in CO2 Records
 
@@ -220,10 +224,47 @@ Your answer to Question 10 is going to be a mix of code chunks and text that you
 
 **Answer 10:**
 
+The columns are depth in meters, age of the ice in years, age of the air in years, and CO2 concentration in ppmv. The data comes from ice core samples extracted at Vostok Station, and the CO₂ values represent past atmospheric conditions. The temporal resolution of the data is approximately 400,000 years, with measurements taken at irregular intervals (sometimes thousands of years apart).
+
 ```{r}
+iceCoreData <- read_table("vostok.icecore.co2", 
+                        col_names = c("Depth", "IceAge", "AirAge", "CO2"),
+                  skip = 20)
 
+iceCoreData <- iceCoreData |> 
+  mutate(year = 2003 - IceAge) |> 
+  arrange(year)
 
+iceCoreData |> 
+  ggplot(aes(x = year, y = CO2)) +
+  geom_line() +
+  theme_classic()
 ```
+
+```{r}
+co2 <- co2 |> 
+  group_by(year) |> 
+  summarize(CO2 = mean(monthly_average)) |> 
+  select(year, CO2)
+
+
+combinedData <- bind_rows(iceCoreData, co2)
+
+combinedData |> 
+  ggplot(aes(x = year, y = CO2)) +
+  geom_line() +
+  theme_classic()
+```
+
+```{r}
+combinedData |> 
+  ggplot(aes(x = year, y = CO2)) +
+  geom_line() +
+  theme_classic() +
+  scale_x_log10()
+```
+
+As seen in the plot, atmospheric CO2 levels fluctuate significantly between years. However, it can be seen that towards the right side of the plot the levels shoot up, which is when the data is getting closer to the present. I created another plot with the x axis scale logged, and you can see this steady increase in that plot.
 
 # Render and committing
 
